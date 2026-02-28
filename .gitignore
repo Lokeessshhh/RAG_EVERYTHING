@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+*.egg-info/
+.pytest_cache/
+
+# Environment
+.env
+.env.local
+.env.production
+
+# Node
+node_modules/
+frontend/node_modules/
+.next/
+frontend/dist/
+dist/
+
+# Build artifacts
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+
+# Temp & uploads
+tmp/
+test_output/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Binary
+acli.exe

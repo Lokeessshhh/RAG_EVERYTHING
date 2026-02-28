@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: rag-everything-backend
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: JINA_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: VOYAGE_API_KEY
+        sync: false
+      - key: ZILLIZ_URI
+        sync: false
+      - key: ZILLIZ_TOKEN
+        sync: false
+      - key: CLOUDFLARE_WORKER_URL
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: UPSTASH_REDIS_REST_URL
+        sync: false
+      - key: UPSTASH_REDIS_REST_TOKEN
+        sync: false

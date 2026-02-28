@@ -1,0 +1,35 @@
+fastapi
+uvicorn
+pydantic
+python-dotenv
+python-multipart
+pymilvus
+pymupdf
+pandas
+gitpython
+PyGithub
+tree-sitter
+tree-sitter-python
+tree-sitter-javascript
+tree-sitter-typescript
+tree-sitter-java
+tree-sitter-go
+tree-sitter-ruby
+tree-sitter-rust
+langchain-text-splitters
+tiktoken
+httpx
+requests
+yt-dlp
+youtube-transcript-api
+# Website RAG
+crawl4ai>=0.6.0
+html2text
+groq
+# Image RAG
+google-genai
+Pillow
+pytesseract
+# Voice RAG
+SpeechRecognition
+av
