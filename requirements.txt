@@ -1,13 +1,33 @@
+# ── Web Framework ─────────────────────────────────────────────────────────────
 fastapi
 uvicorn
+starlette
 pydantic
+pydantic-settings
 python-dotenv
 python-multipart
+
+# ── HTTP Clients ───────────────────────────────────────────────────────────────
+httpx
+requests
+
+# ── Vector Store ──────────────────────────────────────────────────────────────
 pymilvus
-pymupdf
+
+# ── Text Processing & Chunking ────────────────────────────────────────────────
+langchain-text-splitters
+langchain-core
+tiktoken
+
+# ── PDF ───────────────────────────────────────────────────────────────────────
+PyMuPDF
+pypdf
+
+# ── CSV / Data ────────────────────────────────────────────────────────────────
 pandas
-gitpython
-PyGithub
+openpyxl
+
+# ── Code Parsing (Tree-sitter) ────────────────────────────────────────────────
 tree-sitter
 tree-sitter-python
 tree-sitter-javascript
@@ -16,20 +36,40 @@ tree-sitter-java
 tree-sitter-go
 tree-sitter-ruby
 tree-sitter-rust
-langchain-text-splitters
-tiktoken
-httpx
-requests
+tree-sitter-languages
+
+# ── GitHub ────────────────────────────────────────────────────────────────────
+gitpython
+PyGithub
+
+# ── YouTube ───────────────────────────────────────────────────────────────────
 yt-dlp
 youtube-transcript-api
-# Website RAG
-crawl4ai>=0.6.0
+
+# ── Website Crawling ──────────────────────────────────────────────────────────
+crawl4ai
 html2text
+beautifulsoup4
+lxml
+trafilatura
+
+# ── AI Parsing (Groq) ─────────────────────────────────────────────────────────
 groq
-# Image RAG
+
+# ── Image Analysis ────────────────────────────────────────────────────────────
 google-genai
 Pillow
 pytesseract
-# Voice RAG
+
+# ── Voice / Audio ─────────────────────────────────────────────────────────────
 SpeechRecognition
 av
+pydub
+
+# ── Reranking (Voyage) ────────────────────────────────────────────────────────
+# Voyage is called via httpx REST API — no SDK needed
+
+# ── Utilities ─────────────────────────────────────────────────────────────────
+python-dateutil
+anyio
+orjson
