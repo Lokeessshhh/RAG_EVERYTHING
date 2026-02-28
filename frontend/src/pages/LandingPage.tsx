@@ -9,9 +9,17 @@ import { ThemeToggle } from '../components/ThemeToggle';
 import { ThreeBackground } from '../components/ThreeBackground';
 import { WireframeShape } from '../components/WireframeShape';
 import ErrorBoundary from '../components/ErrorBoundary';
+import { useBackendStatus } from '../context/BackendStatusContext';
 
 const LandingPage = () => {
   const [scrolled, setScrolled] = useState(false);
+  const { status, checkBackend } = useBackendStatus();
+
+  const dotClassName = status === 'online'
+    ? 'bg-emerald-500'
+    : status === 'connecting'
+      ? 'bg-red-500 animate-pulse'
+      : 'bg-red-500';
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -19,15 +27,19 @@ const LandingPage = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  useEffect(() => {
+    checkBackend();
+  }, [checkBackend]);
+
   return (
     <div className="min-h-screen bg-bg text-text selection:bg-accent selection:text-white overflow-x-hidden">
       {/* Navbar */}
       <nav className={`fixed top-0 left-0 right-0 h-16 z-50 transition-all duration-300 ${
         scrolled ? 'glass border-b border-border shadow-sm' : 'bg-transparent'
       }`}>
-        <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-full flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-2.5 h-2.5 rounded-full bg-accent animate-pulse" />
+            <div className={`w-2.5 h-2.5 rounded-full ${dotClassName}`} />
             <span className="font-display text-xl font-bold tracking-tight">RAG Everything</span>
           </div>
           
@@ -52,7 +64,7 @@ const LandingPage = () => {
           <ThreeBackground />
         </ErrorBoundary>
         
-        <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-[1.5fr_1fr] gap-12 items-center w-full relative z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 grid md:grid-cols-[1.5fr_1fr] gap-10 md:gap-12 items-center w-full relative z-10">
           {/* Left Content */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -63,7 +75,7 @@ const LandingPage = () => {
               Open Source • Free Tier • Production Ready
             </div>
             
-            <h1 className="font-display text-6xl lg:text-8xl leading-[0.9] tracking-tighter mb-6">
+            <h1 className="font-display text-4xl sm:text-6xl lg:text-8xl leading-[0.9] tracking-tighter mb-6">
               Chat with <br />
               <motion.span 
                 className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-emerald-500 inline-block"
@@ -78,16 +90,16 @@ const LandingPage = () => {
               You Own.
             </h1>
 
-            <p className="text-text-muted text-xl max-w-lg mb-10 font-body leading-relaxed">
+            <p className="text-text-muted text-base sm:text-xl max-w-lg mb-10 font-body leading-relaxed">
               Ingest PDFs, code, CSVs, GitHub repos, chat exports and more. 
               Ask questions. Get answers with sources cited.
             </p>
 
             <div className="flex flex-wrap gap-4 mb-12">
-              <Link to="/app" className="flex items-center gap-2 bg-accent text-white px-8 py-4 rounded-xl font-bold text-lg hover:shadow-xl hover:shadow-accent/30 transition-all">
+              <Link to="/app" className="flex items-center gap-2 bg-accent text-white px-6 sm:px-8 py-4 rounded-xl font-bold text-base sm:text-lg hover:shadow-xl hover:shadow-accent/30 transition-all">
                 Start for Free <ArrowRight className="w-5 h-5" />
               </Link>
-              <a href="https://github.com" target="_blank" rel="noreferrer" className="flex items-center gap-2 bg-surface border border-border px-8 py-4 rounded-xl font-bold text-lg hover:bg-surface2 transition-all">
+              <a href="https://github.com/Lokeessshhh/RAG_EVERYTHING/" target="_blank" rel="noreferrer" className="flex items-center gap-2 bg-surface border border-border px-6 sm:px-8 py-4 rounded-xl font-bold text-base sm:text-lg hover:bg-surface2 transition-all">
                 <Github className="w-5 h-5" /> View on GitHub
               </a>
             </div>
@@ -155,7 +167,7 @@ const LandingPage = () => {
 
       {/* Marquee Section */}
       <section id="sources" className="py-24 bg-bg-secondary/50 overflow-hidden border-y border-border">
-        <div className="max-w-7xl mx-auto px-6 mb-16 text-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 mb-16 text-center">
           <h2 className="font-display text-4xl mb-4">Every format. One conversation.</h2>
           <p className="text-text-muted">A unified knowledge base for all your distributed information.</p>
         </div>
@@ -201,7 +213,7 @@ const LandingPage = () => {
 
       {/* How It Works */}
       <section id="how-it-works" className="py-32 bg-bg overflow-hidden">
-        <div className="max-w-7xl mx-auto px-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="grid md:grid-cols-3 gap-12 relative">
             {/* Connector Line */}
             <div className="absolute top-10 left-[15%] right-[15%] h-0.5 bg-border hidden md:block">
@@ -241,7 +253,7 @@ const LandingPage = () => {
 
       {/* Features Grid */}
       <section id="features" className="py-32 bg-bg-secondary/30">
-        <div className="max-w-7xl mx-auto px-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="grid md:grid-cols-2 gap-8">
             {[
               { title: 'Semantic Search', desc: 'Finds meaning, not just keywords. 768-dim vectors via Gemini.', icon: Search },
@@ -270,13 +282,15 @@ const LandingPage = () => {
 
       {/* Footer */}
       <footer className="py-12 border-t border-border mt-20">
-        <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-3 gap-12 items-start">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 grid md:grid-cols-3 gap-12 items-start">
           <div>
             <div className="flex items-center gap-2 mb-4">
               <div className="w-2.5 h-2.5 rounded-full bg-accent" />
-              <span className="font-display text-lg font-bold">RAG Everything</span>
+              <span className="font-display font-bold text-lg">RAG Everything</span>
             </div>
-            <p className="text-sm text-text-muted">The unified intelligence layer for your personal and professional documents.</p>
+            <p className="text-sm text-text-muted leading-relaxed">
+              The unified intelligence layer for your personal and professional documents.
+            </p>
           </div>
           
           <div className="grid grid-cols-2 gap-8">
@@ -302,8 +316,8 @@ const LandingPage = () => {
             </div>
           </div>
         </div>
-        <div className="max-w-7xl mx-auto px-6 mt-12 pt-8 border-t border-border flex justify-between items-center">
-          <p className="text-[10px] text-text-muted">© 2026 RAG Everything. Built with ❤️ for the open source community.</p>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-12 pt-8 border-t border-border flex justify-between items-center">
+          <p className="text-[10px] text-text-muted"> 2026 RAG Everything. Built with for the open source community.</p>
           <div className="flex gap-4">
             <a href="#" className="text-text-muted hover:text-text transition-colors"><Github className="w-4 h-4" /></a>
           </div>

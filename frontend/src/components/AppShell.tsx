@@ -4,9 +4,22 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { ThemeToggle } from './ThemeToggle';
+import { useEffect } from 'react';
+import { useBackendStatus } from '../context/BackendStatusContext';
 
 const AppShell = () => {
   const location = useLocation();
+  const { status, checkBackend } = useBackendStatus();
+
+  useEffect(() => {
+    checkBackend();
+  }, [checkBackend]);
+
+  const dotClassName = status === 'online'
+    ? 'bg-emerald-500'
+    : status === 'connecting'
+      ? 'bg-red-500 animate-pulse'
+      : 'bg-red-500';
 
   const navLinks = [
     { to: '/app/upload', label: 'Upload', icon: Upload },
@@ -20,7 +33,7 @@ const AppShell = () => {
       <aside className="hidden md:flex flex-col w-60 border-r border-border bg-surface shrink-0">
         <div className="p-6">
           <Link to="/" className="flex items-center gap-2 mb-8">
-            <div className="w-2.5 h-2.5 rounded-full bg-accent" />
+            <div className={`w-2.5 h-2.5 rounded-full ${dotClassName}`} />
             <span className="font-display text-xl font-bold tracking-tight">RAG Everything</span>
           </Link>
 
@@ -75,7 +88,7 @@ const AppShell = () => {
       <main className="flex-1 flex flex-col h-full overflow-hidden relative">
         <header className="md:hidden h-14 border-b border-border flex items-center px-4 shrink-0 bg-surface/80 backdrop-blur-md">
            <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-accent" />
+            <div className={`w-2 h-2 rounded-full ${dotClassName}`} />
             <span className="font-display font-bold">RAG Everything</span>
           </div>
         </header>

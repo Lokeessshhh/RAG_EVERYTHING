@@ -10,6 +10,7 @@ import { chatStream, getLibrary } from '../services/api';
 import { useVoiceInput } from '../hooks/useVoiceInput';
 import { useToast } from '../components/Toast';
 import IngestModal from '../components/IngestModal';
+import { useBackendStatus } from '../context/BackendStatusContext';
 
 interface Message {
   id: string;
@@ -20,6 +21,7 @@ interface Message {
 
 const ChatPage = () => {
   const { toast } = useToast();
+  const { checkBackend } = useBackendStatus();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -52,6 +54,10 @@ const ChatPage = () => {
   useEffect(() => {
     fetchLibrary();
   }, []);
+
+  useEffect(() => {
+    checkBackend();
+  }, [checkBackend]);
 
   useEffect(() => {
     scrollToBottom();
@@ -303,7 +309,7 @@ const ChatPage = () => {
         </div>
 
         {/* Input Area */}
-        <div className="p-4 md:p-6 bg-gradient-to-t from-bg via-bg to-transparent relative z-10">
+        <div className="p-4 md:p-6 pb-20 md:pb-6 bg-gradient-to-t from-bg via-bg to-transparent relative z-10">
           <div className="max-w-3xl mx-auto relative">
             {/* Listening Indicator Overlay */}
             <AnimatePresence>
