@@ -3,7 +3,7 @@ import {
   Upload, Github, FileText, Code, Database, Loader2,
   Type, Youtube, Globe, Image as ImageIcon, Mic, X, MessageSquare
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { 
   uploadFiles, ingestGithub, getLibrary,
   ingestText, ingestYoutube, ingestWebsite, ingestImage, ingestAudio, ingestAIChat
