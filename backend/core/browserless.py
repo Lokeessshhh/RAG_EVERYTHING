@@ -79,9 +79,13 @@ class BrowserlessClient:
             "url": url,
         }
         
+        # waitForSelector must be an object with selector property
         if wait_for:
-            payload["waitForSelector"] = wait_for
-        if wait_timeout:
+            payload["waitForSelector"] = {
+                "selector": wait_for,
+                "timeout": wait_timeout or 30000,
+            }
+        elif wait_timeout:
             payload["waitForTimeout"] = wait_timeout
         if user_agent:
             payload["userAgent"] = user_agent
