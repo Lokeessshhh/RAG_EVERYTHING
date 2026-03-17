@@ -101,9 +101,22 @@ async def fetch_html(url: str) -> Optional[str]:
         print(f"[AI Chat Parser] Fetching with Browserless: {url}")
         
         client = get_browserless_client()
+        
+        # Wait for conversation content to render
+        # Different platforms have different selectors
+        platform = detect_platform(url)
+        wait_selector = None
+        if platform == "claude":
+            wait_selector = '[data-testid="user-message"]'
+        elif platform == "chatgpt":
+            wait_selector = '[data-message-author-role]'
+        elif platform == "gemini":
+            wait_selector = '.conversation-turn'
+        
         result = await client.scrape(
             url=url,
-            wait_timeout=10000,  # 10 seconds for JS to render
+            wait_for=wait_selector,
+            wait_timeout=15000,  # 15 seconds for JS to render
         )
         
         if result.success and result.html:
