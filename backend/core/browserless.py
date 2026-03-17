@@ -6,6 +6,7 @@ Cloud-based browser automation for scraping JS-rendered pages.
 API Docs: https://www.browserless.io/docs/
 """
 
+import os
 import re
 from typing import Optional, Dict, Any, List
 from dataclasses import dataclass
@@ -14,7 +15,7 @@ import httpx
 
 # Browserless API configuration
 BROWSERLESS_API_URL = "https://chrome.browserless.io"
-BROWSERLESS_API_KEY = "2UACALckmhXD2j416821b260bb85ab3145cb713ef3809865e"
+BROWSERLESS_API_KEY = os.environ.get("BROWSERLESS_API_KEY", "")
 
 
 @dataclass
