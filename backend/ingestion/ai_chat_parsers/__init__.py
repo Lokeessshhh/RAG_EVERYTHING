@@ -86,7 +86,7 @@ def get_parser_script(platform: str) -> Optional[str]:
 async def fetch_html(url: str) -> Optional[str]:
     """
     Fetch HTML content from a URL.
-    Uses crawl4ai (JS rendering) if available, falls back to httpx.
+    Uses Browserless (cloud JS rendering), falls back to httpx.
     
     Args:
         url: URL to fetch
@@ -94,56 +94,27 @@ async def fetch_html(url: str) -> Optional[str]:
     Returns:
         Raw HTML string or None if failed
     """
-    import asyncio
-    
-    # Try crawl4ai with proper Windows handling (run sync in thread pool)
+    # Try Browserless first (cloud-based headless browser)
     try:
-        from crawl4ai import AsyncWebCrawler, BrowserConfig, CrawlerRunConfig, CacheMode
+        from backend.core.browserless import get_browserless_client
         
-        print(f"[AI Chat Parser] Fetching with crawl4ai: {url}")
+        print(f"[AI Chat Parser] Fetching with Browserless: {url}")
         
-        # Run crawler in a separate process to avoid Windows asyncio issues
-        loop = asyncio.get_event_loop()
+        client = get_browserless_client()
+        result = await client.scrape(
+            url=url,
+            wait_timeout=10000,  # 10 seconds for JS to render
+        )
         
-        async def _crawl():
-            browser_cfg = BrowserConfig(headless=True, verbose=False)
-            run_cfg = CrawlerRunConfig(
-                cache_mode=CacheMode.BYPASS,
-                wait_for_images=False,
-                delay_before_return_html=5.0,
-            )
-            async with AsyncWebCrawler(config=browser_cfg) as crawler:
-                result = await crawler.arun(url=url, config=run_cfg)
-                return result
-        
-        # Use subprocess-friendly approach on Windows
-        import sys
-        if sys.platform == 'win32':
-            # On Windows, create a new event loop in a thread
-            import concurrent.futures
-            import asyncio as aio
-            
-            def run_in_new_loop():
-                new_loop = aio.new_event_loop()
-                aio.set_event_loop(new_loop)
-                try:
-                    return new_loop.run_until_complete(_crawl())
-                finally:
-                    new_loop.close()
-            
-            with concurrent.futures.ThreadPoolExecutor() as pool:
-                result = await loop.run_in_executor(pool, run_in_new_loop)
-        else:
-            result = await _crawl()
-        
-        if result and result.success:
-            return result.html or ""
+        if result.success and result.html:
+            print(f"[AI Chat Parser] Browserless success: {len(result.html)} chars")
+            return result.html
         else:
             error_msg = result.error_message if result else "Unknown error"
-            print(f"[AI Chat Parser] crawl4ai failed: {error_msg}")
+            print(f"[AI Chat Parser] Browserless failed: {error_msg}")
             
     except Exception as e:
-        print(f"[AI Chat Parser] crawl4ai unavailable/failed ({e}). Falling back to httpx...")
+        print(f"[AI Chat Parser] Browserless unavailable/failed ({e}). Falling back to httpx...")
     
     # Fallback to httpx with better headers
     import httpx

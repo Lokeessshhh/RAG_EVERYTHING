@@ -1,11 +1,11 @@
 """
 Website RAG Ingester
 ====================
-Crawls a full website using Crawl4AI and indexes every page into the vector store.
+Crawls a full website using Browserless.io and indexes every page into the vector store.
 
 Strategy:
 1. Fetch sitemap.xml / sitemap_index.xml / robots.txt to discover all URLs
-2. Crawl each URL using Crawl4AI (async, headless Chromium) to get clean text
+2. Crawl each URL using Browserless (cloud headless Chromium) to get clean text
 3. Aggressively clean all markdown artifacts, HTML tags, URLs, and noise
 4. Chunk clean text and return Chunk objects for embedding
 
@@ -26,7 +26,7 @@ import re
 import unicodedata
 import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
-from typing import List, Optional, Set, Tuple, Dict, Any
+from typing import List, Optional, Set, Dict, Any
 from urllib.parse import urlparse
 
 import httpx
@@ -35,14 +35,10 @@ from backend.config import CHUNKING, AI_PARSER
 from backend.ingestion.base import BaseIngester, Chunk
 
 # ---------------------------------------------------------------------------
-# Optional dependency: crawl4ai
+# Browserless client for cloud-based scraping
 # ---------------------------------------------------------------------------
-try:
-    from crawl4ai import AsyncWebCrawler, BrowserConfig, CrawlerRunConfig, CacheMode
-    CRAWL4AI_AVAILABLE = True
-except ImportError:
-    CRAWL4AI_AVAILABLE = False
-    print("[WARN] crawl4ai not installed - falling back to httpx+html2text for website crawling.")
+from backend.core.browserless import get_browserless_client, BrowserlessClient
+BROWSERLESS_AVAILABLE = True  # Browserless is a cloud API, always available
 
 try:
     import html2text
@@ -157,10 +153,8 @@ class WebsiteIngester(BaseIngester):
         if len(urls) > 10:
             print(f"[Website]   ... and {len(urls) - 10} more")
 
-        if CRAWL4AI_AVAILABLE:
-            all_chunks = await self._crawl_with_crawl4ai(urls, root_url)
-        else:
-            all_chunks = await self._crawl_with_httpx(urls, root_url)
+        # Use Browserless for JS-rendered scraping (cloud-based)
+        all_chunks = await self._crawl_with_browserless(urls, root_url)
 
         # Global deduplication across all pages
         before = len(all_chunks)
@@ -313,43 +307,32 @@ class WebsiteIngester(BaseIngester):
         return result
 
     # ------------------------------------------------------------------
-    # Crawling: Crawl4AI
+    # Crawling: Browserless (cloud-based headless browser)
     # ------------------------------------------------------------------
 
-    async def _crawl_with_crawl4ai(self, urls: List[str], root_url: str) -> List[Chunk]:
-        browser_cfg = BrowserConfig(headless=True, verbose=False)
-        run_cfg = CrawlerRunConfig(
-            cache_mode=CacheMode.BYPASS,
-            word_count_threshold=20,
-            excluded_tags=["nav", "header", "footer", "script", "style", "aside",
-                           "form", "button", "noscript", "iframe", "svg"],
-            exclude_external_links=True,
-            exclude_social_media_links=True,
-            process_iframes=False,
-            remove_overlay_elements=True,
-        )
-
-        async with AsyncWebCrawler(config=browser_cfg) as crawler:
-            semaphore = asyncio.Semaphore(CONCURRENT_CRAWLS)
-            tasks = [
-                self._crawl_one_crawl4ai_raw(
-                    crawler,
-                    url,
-                    run_cfg,
-                    semaphore,
-                    page_index=i + 1,
-                    page_total=len(urls),
-                )
-                for i, url in enumerate(urls)
-            ]
-            raw_results = await asyncio.gather(*tasks, return_exceptions=True)
+    async def _crawl_with_browserless(self, urls: List[str], root_url: str) -> List[Chunk]:
+        """Crawl URLs using Browserless.io cloud API."""
+        client = get_browserless_client()
+        semaphore = asyncio.Semaphore(CONCURRENT_CRAWLS)
+        
+        tasks = [
+            self._crawl_one_browserless(
+                client,
+                url,
+                semaphore,
+                page_index=i + 1,
+                page_total=len(urls),
+            )
+            for i, url in enumerate(urls)
+        ]
+        raw_results = await asyncio.gather(*tasks, return_exceptions=True)
 
         pages: List[Dict[str, Any]] = []
         for result in raw_results:
             if isinstance(result, dict):
                 pages.append(result)
             elif isinstance(result, Exception):
-                print(f"[Website] Crawl4AI task error: {result}")
+                print(f"[Website] Browserless task error: {result}")
 
         if self.use_ai_parser:
             return await self._pages_to_chunks_ai(pages, root_url)
@@ -362,27 +345,41 @@ class WebsiteIngester(BaseIngester):
             all_chunks.extend(self._text_to_chunks(clean, p["url"], root_url, p["title"]))
         return all_chunks
 
-    async def _crawl_one_crawl4ai_raw(
+    async def _crawl_one_browserless(
         self,
-        crawler,
-        url,
-        run_cfg,
-        semaphore,
+        client: BrowserlessClient,
+        url: str,
+        semaphore: asyncio.Semaphore,
         page_index: int,
         page_total: int,
     ) -> Dict[str, Any]:
+        """Crawl a single URL using Browserless."""
         async with semaphore:
             await asyncio.sleep(CRAWL_DELAY_S)
-            result = await crawler.arun(url=url, config=run_cfg)
+            
+            # Use scrape_markdown for cleaner text extraction
+            result = await client.scrape_markdown(
+                url=url,
+                wait_timeout=10000,  # 10 seconds for JS to render
+                exclude_selectors=[
+                    "nav", "header", "footer", "script", "style", "aside",
+                    "form", "button", "noscript", "iframe", "svg",
+                    ".nav", ".footer", ".header", ".sidebar",
+                    "#nav", "#footer", "#header",
+                ],
+            )
+            
             if not result.success:
                 print(f"[Website] ✗ FAILED : {url}")
                 print(f"[Website]   Reason  : {result.error_message}")
                 return {}
-            raw = getattr(result, "fit_markdown", None) or result.markdown or ""
+            
+            raw = result.markdown or result.html or ""
             if not raw.strip():
                 print(f"[Website] ✗ EMPTY  : {url} (no content extracted)")
                 return {}
-            title = (getattr(result, "metadata", None) or {}).get("title", "") or url
+            
+            title = result.title or url
             return {"url": url, "title": title, "raw": raw, "page_index": page_index, "page_total": page_total}
 
     # ------------------------------------------------------------------

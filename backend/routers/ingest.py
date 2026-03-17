@@ -180,7 +180,7 @@ class WebsiteRequest(BaseModel):
 
 @router.post("/website", response_model=IngestResponse)
 async def ingest_website(request: WebsiteRequest):
-    """Crawl an entire website using Crawl4AI + sitemap discovery and ingest all pages."""
+    """Crawl an entire website using Browserless + sitemap discovery and ingest all pages."""
     url = request.url.strip()
     if not url.startswith(("http://", "https://")):
         url = "https://" + url
