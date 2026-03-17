@@ -107,7 +107,8 @@ async def fetch_html(url: str) -> Optional[str]:
         platform = detect_platform(url)
         wait_selector = None
         if platform == "claude":
-            wait_selector = '[data-testid="user-message"]'
+            # Claude uses different selectors - try the main content area
+            wait_selector = 'main, [role="main"], .conversation-container'
         elif platform == "chatgpt":
             wait_selector = '[data-message-author-role]'
         elif platform == "gemini":
@@ -116,7 +117,7 @@ async def fetch_html(url: str) -> Optional[str]:
         result = await client.scrape(
             url=url,
             wait_for=wait_selector,
-            wait_timeout=15000,  # 15 seconds for JS to render
+            wait_timeout=20000,  # 20 seconds for JS to render
         )
         
         if result.success and result.html:
